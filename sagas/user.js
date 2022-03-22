@@ -1,77 +1,154 @@
+import { all, delay, fork, put, takeLatest } from "redux-saga/effects";
+import axios from "axios";
+
 import {
-  all,
-  put,
-  folk,
-  takeLatest,
-  takeEvery,
-  call,
-  put,
-  take,
-} from "redux-saga/effects";
-import { LOG_IN, LOG_IN_SUCCESS, LOG_IN_FAILURE } from "../reducers/user";
+  FOLLOW_FAILURE,
+  FOLLOW_REQUEST,
+  FOLLOW_SUCCESS,
+  LOG_IN_FAILURE,
+  LOG_IN_REQUEST,
+  LOG_IN_SUCCESS,
+  LOG_OUT_FAILURE,
+  LOG_OUT_REQUEST,
+  LOG_OUT_SUCCESS,
+  SIGN_UP_FAILURE,
+  SIGN_UP_REQUEST,
+  SIGN_UP_SUCCESS,
+  UNFOLLOW_FAILURE,
+  UNFOLLOW_REQUEST,
+  UNFOLLOW_SUCCESS,
+} from "../reducers/user";
 
-const HELLO_SAGA = "HELLO_SAGA";
-
-function* loginAPI() {
-  // 서버에 요청 보냄
+function logInAPI(data) {
+  return axios.post("/api/login", data);
 }
 
-function* login() {
+function* logIn(action) {
   try {
-    yield fork(logger); // logger는 내 기록을 로깅하는 함수로 10초 걸림
-    yield call(loginAPI);
+    console.log("saga logIn");
+    // const result = yield call(logInAPI);
+    yield delay(1000);
     yield put({
-      // put == dispatch
       type: LOG_IN_SUCCESS,
+      data: action.data,
     });
-  } catch (e) {
+  } catch (err) {
+    console.error(err);
     yield put({
-      type: LOGIN_FAILURE,
+      type: LOG_IN_FAILURE,
+      error: err.response.data,
     });
   }
 }
 
-function* watchLogin() {
-  while (true) {
-    yield take(LOG_IN); // LOG_IN 액션을 받으면
+function logOutAPI() {
+  return axios.post("/api/logout");
+}
+
+function* logOut() {
+  try {
+    // const result = yield call(logOutAPI);
+    yield delay(1000);
     yield put({
-      // 자동으로 put안에 있는 LOG_ING_SUCCESS 가 실행됨
-      // put은 saga의 dispatch
-      type: LOG_IN_SUCCESS,
+      type: LOG_OUT_SUCCESS,
+    });
+  } catch (err) {
+    console.error(err);
+    yield put({
+      type: LOG_OUT_FAILURE,
+      error: err.response.data,
     });
   }
 }
 
-// function* watchHello() {
-//   console.log("before saga");
-//   // for(let i = 0; i < 5; i++) -> for문 사용가능
-//   while (true) {
-//     // while을 사용할 경우 dispatch를 여러번해도 함수가 종료되지 않음
-//     // while을 사용하지 않으면 액션을 한번만 실행하고 함수가 종료됨
-//     yield take(HELLO_SAGA); // take 함수 안에 next가 들어있음
-//     console.log("hello saga");
-//   }
-// }
+function signUpAPI() {
+  return axios.post("/api/signUp");
+}
 
-// function* watchHello() {
-//   while (true) {
-//     yield take(HELLO_SAGA);
-//     console.log(1);
-//     console.log(2);
-//     console.log(3);
-//     console.log(4);
-//   }
-// }
-
-function* watchHello() {
-  yield takeLatest(HELLO_SAGA, function* () {
+function* signUp() {
+  try {
+    // const result = yield call(signUpAPI);
+    yield delay(1000);
     yield put({
-      type: "BYE_SAGA",
+      type: SIGN_UP_SUCCESS,
     });
-  });
+  } catch (err) {
+    console.error(err);
+    yield put({
+      type: SIGN_UP_FAILURE,
+      error: err.response.data,
+    });
+  }
+}
+
+function followAPI() {
+  return axios.post("/api/follow");
+}
+
+function* follow(action) {
+  try {
+    // const result = yield call(followAPI);
+    yield delay(1000);
+    yield put({
+      type: FOLLOW_SUCCESS,
+      data: action.data,
+    });
+  } catch (err) {
+    console.error(err);
+    yield put({
+      type: FOLLOW_FAILURE,
+      error: err.response.data,
+    });
+  }
+}
+
+function unfollowAPI() {
+  return axios.post("/api/unfollow");
+}
+
+function* unfollow(action) {
+  try {
+    // const result = yield call(unfollowAPI);
+    yield delay(1000);
+    yield put({
+      type: UNFOLLOW_SUCCESS,
+      data: action.data,
+    });
+  } catch (err) {
+    console.error(err);
+    yield put({
+      type: UNFOLLOW_FAILURE,
+      error: err.response.data,
+    });
+  }
+}
+
+function* watchFollow() {
+  yield takeLatest(FOLLOW_REQUEST, follow);
+}
+
+function* watchUnfollow() {
+  yield takeLatest(UNFOLLOW_REQUEST, unfollow);
+}
+
+function* watchLogIn() {
+  yield takeLatest(LOG_IN_REQUEST, logIn);
+}
+
+function* watchLogOut() {
+  yield takeLatest(LOG_OUT_REQUEST, logOut);
+}
+
+function* watchSignUp() {
+  yield takeLatest(SIGN_UP_REQUEST, signUp);
 }
 
 export default function* userSaga() {
-  // 여러 액션을 리스닝 할 수 있도록 만들
-  yield all([fork(watchHello), fork(watchLogin), fork(watchSignup)]);
+  yield all([
+    fork(watchFollow),
+    fork(watchUnfollow),
+    fork(watchLogIn),
+    fork(watchLogOut),
+    fork(watchSignUp),
+  ]);
 }
